@@ -1,20 +1,26 @@
 import numpy as np
+
 GAP = "-"
-MISMATCH= "*"
+MISMATCH = "*"
+LOCAL = "local"
+GLOBAL = "global"
 LEFT = "l"
 UP = "u"
 UP_LEFT = "c"
-pos_moves = {LEFT:(0, -1), UP: (-1, 0), UP_LEFT:(-1, -1)}
+pos_moves = {LEFT: (0, -1), UP: (-1, 0), UP_LEFT: (-1, -1)}
+
 
 def add_gap(s):
     return "*" + s
 
+
 def init_arrays(s1, s2):
     s1 = add_gap(s1)
     s2 = add_gap(s2)
-    return np.zeros( [len(s2), len(s1)], dtype=int), np.empty([len(s2), len(s1)], dtype=str)
+    return np.zeros([len(s2), len(s1)], dtype=int), np.empty([len(s2), len(s1)], dtype=str)
 
-def score(x,y, match = 1, mismatch = -1, gap = -2):
+
+def score(x, y, match=1, mismatch=-1, gap=-2):
     if x == GAP or y == GAP:
         return gap
     elif x == y:
@@ -22,16 +28,17 @@ def score(x,y, match = 1, mismatch = -1, gap = -2):
     else:
         return mismatch
 
+
 def possible_moves(i, j):
     possibilities = [(0, -1, LEFT), (-1, -1, UP_LEFT), (-1, 0, UP)]
     moves = []
     for move in possibilities:
-        if (i + move[0]) >= 0 and (j + move[1] >=0):
+        if (i + move[0]) >= 0 and (j + move[1] >= 0):
             moves.append(move)
     return moves
 
 
-def calculate_best_move_value(i, j, alignment_array,s1="CAAGAC", s2="GAAC"):
+def calculate_best_move_value(i, j, alignment_array, s1="CAAGAC", s2="GAAC", type=GLOBAL):
     moves = possible_moves(i, j)
     scores = []
     for move in moves:
@@ -44,6 +51,8 @@ def calculate_best_move_value(i, j, alignment_array,s1="CAAGAC", s2="GAAC"):
 
     values = [alignment_array[i + move[0]][j + move[1]] + scores[it][0] for it, move in enumerate(moves)]
     best = (max(values), moves[values.index(max(values))][2])
+    if type == LOCAL and best[0] <= 0:
+        best = (0, '')
     return best
 
 
@@ -51,12 +60,15 @@ def make_move(i, j, m):
     return i + pos_moves[m][0], j + pos_moves[m][1]
 
 
-def read_final_alignment(s1, s2, direction_array):
-    i = len(s2)
-    j = len(s1)
+def read_final_alignment(s1, s2, alignment_array, direction_array, type):
+    if type == LOCAL:
+        i, j = np.unravel_index(np.argmax(alignment_array, axis=None), alignment_array.shape)
+    else:
+        i = len(s2)
+        j = len(s1)
     line = result = ''
-    while direction_array[i][j] != '':
-        m = direction_array[i][j]
+    while direction_array[i, j] != '':
+        m = direction_array[i, j]
         i, j = make_move(i, j, m)
         result = result + m
         if m != UP_LEFT:
@@ -66,26 +78,29 @@ def read_final_alignment(s1, s2, direction_array):
                 line = s1[j] + line
             else:
                 line = MISMATCH + line
-    return line
+    return line, j
 
 
-def global_needleman_wunsch(s1, s2):
+def calculate_alingment(s1, s2, type=GLOBAL):
     alignment_array, direction_array = init_arrays(s1, s2)
     for i in range(0, alignment_array.shape[0]):
         for j in range(0, alignment_array.shape[1]):
             if i == 0 and j == 0:
                 continue
             else:
-                alignment_array[i][j], direction_array[i, j] = calculate_best_move_value(i, j, alignment_array, s1, s2)
+                alignment_array[i, j], direction_array[i, j] = calculate_best_move_value(i, j, alignment_array, s1, s2, type)
     print(alignment_array)
     print(direction_array)
 
-    return read_final_alignment(s1, s2, direction_array)
+    return read_final_alignment(s1, s2, alignment_array, direction_array, type)
 
 
 s1 = "CAAGAC"
 s2 = "GAAC"
 
-line = global_needleman_wunsch(s1, s2)
+line, j = calculate_alingment(s1, s2)
 print(s1)
-print(line)
+print(line, j)
+line, j = calculate_alingment(s1, "AGA", LOCAL)
+print(s1)
+print(line, j)
