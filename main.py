@@ -1,8 +1,10 @@
 import numpy as np
-GAP = "*"
-LEFT = "left"
-UP = "up"
-UP_LEFT = "cross"
+GAP = "-"
+MISMATCH= "*"
+LEFT = "l"
+UP = "u"
+UP_LEFT = "c"
+pos_moves = {LEFT:(0, -1), UP: (-1, 0), UP_LEFT:(-1, -1)}
 
 def add_gap(s):
     return "*" + s
@@ -44,6 +46,29 @@ def calculate_best_move_value(i, j, alignment_array,s1="CAAGAC", s2="GAAC"):
     best = (max(values), moves[values.index(max(values))][2])
     return best
 
+
+def make_move(i, j, m):
+    return i + pos_moves[m][0], j + pos_moves[m][1]
+
+
+def read_final_alignment(s1, s2, direction_array):
+    i = len(s2)
+    j = len(s1)
+    line = result = ''
+    while direction_array[i][j] != '':
+        m = direction_array[i][j]
+        i, j = make_move(i, j, m)
+        result = result + m
+        if m != UP_LEFT:
+            line = GAP + line
+        else:
+            if s2[i] == s1[j]:
+                line = s1[j] + line
+            else:
+                line = MISMATCH + line
+    return line
+
+
 def global_needleman_wunsch(s1, s2):
     alignment_array, direction_array = init_arrays(s1, s2)
     for i in range(0, alignment_array.shape[0]):
@@ -52,10 +77,15 @@ def global_needleman_wunsch(s1, s2):
                 continue
             else:
                 alignment_array[i][j], direction_array[i, j] = calculate_best_move_value(i, j, alignment_array, s1, s2)
-    print (alignment_array)
-    print (direction_array)
+    print(alignment_array)
+    print(direction_array)
+
+    return read_final_alignment(s1, s2, direction_array)
+
 
 s1 = "CAAGAC"
 s2 = "GAAC"
 
-global_needleman_wunsch(s1, s2)
+line = global_needleman_wunsch(s1, s2)
+print(s1)
+print(line)
