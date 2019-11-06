@@ -12,21 +12,32 @@ def test_possible_moves():
 def test_global():
     s1 = "CAAGAC"
     s2 = "GAAC"
-    line, j = calculate_alignment(s1, s2)
+    line, j , score = calculate_alignment(s1, s2, [1, -1, -2])
     assert line == "*AA--C"
     assert j == 0
-
+    assert score == -2
 
 def test_global2():
     s1 = "CAAGTAAGTTA"
     s2 = "CAAGACCT"
-    line, j = calculate_alignment(s1, s2)
+    line, j , score = calculate_alignment(s1, s2, [1, -1, -2])
     assert line == "CAAG-A**T--"
+    assert score == -2
+
+def test_global_score():
+    s1 = "CAAGAC"
+    s2 = "GAAC"
+    line, j , score = calculate_alignment(s1, s2, [1, -1, -1])
+    assert line == "*AA--C"
+    assert j == 0
+    assert score == 0
+
 
 
 def test_local():
     s1 = "CAAGAC"
     s2 = "AGA"
-    line, j = calculate_alignment(s1, s2, LOCAL)
+    line, j , score= calculate_alignment(s1, s2, [1, -1, -2], LOCAL)
     assert line == "AGA"
     assert j == 2
+    assert score == 3
