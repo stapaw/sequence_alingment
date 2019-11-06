@@ -17,6 +17,13 @@ def test_global():
     assert j == 0
 
 
+def test_global2():
+    s1 = "CAAGTAAGTTA"
+    s2 = "CAAGACCT"
+    line, j = calculate_alignment(s1, s2)
+    assert line == "CAAG-A**T--"
+
+
 def test_local():
     s1 = "CAAGAC"
     s2 = "AGA"
