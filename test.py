@@ -1,5 +1,5 @@
 import pytest
-from main import *
+from algorithm import *
 
 
 def test_possible_moves():

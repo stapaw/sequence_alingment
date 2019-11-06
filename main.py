@@ -1,130 +1,40 @@
-import numpy as np
-from tqdm import tqdm
+import argparse
+from algorithm import *
 
-GAP = "-"
-MISMATCH = "*"
-LOCAL = "local"
-GLOBAL = "global"
-LEFT = "l"
-UP = "u"
-UP_LEFT = "c"
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
+from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
 
-pos_moves = {LEFT: (0, -1), UP: (-1, 0), UP_LEFT: (-1, -1)}
-
-
-def add_gap(s):
-    return "*" + s
-
-
-def init_arrays(s1, s2):
-    s1 = add_gap(s1)
-    s2 = add_gap(s2)
-    return np.zeros([len(s2), len(s1)], dtype=int), np.empty([len(s2), len(s1)], dtype=str)
+parser = argparse.ArgumentParser()
+parser.add_argument("--s1", help="first sequence", type=str, default="")
+parser.add_argument("--s2", help="second sequence", type=str, default="")
+parser.add_argument("--filename1", help="path to file with first sequence in FASTA format", type=str, required=False)
+parser.add_argument("--filename2", help="path to file with second sequence in FASTA format", type=str, required=False)
+parser.add_argument("--type", type=str, help="global or local", default=GLOBAL)
+parser.add_argument('--scores', nargs='+', type=int, help="weights of score function: [match, mismatch, gap]",
+                    default=[1, -1, -2])
+args = parser.parse_args()
 
 
-def score(x, y, scores):
-    match, mismatch, gap = scores[0], scores[1], scores[2]
-    if x == GAP or y == GAP:
-        return gap
-    elif x == y:
-        return match
-    else:
-        return mismatch
+def read_sequence_from_file(filename):
+    for seq_record in SeqIO.parse(filename, "fasta"):
+        return Seq(str(seq_record.seq), IUPAC.unambiguous_dna)
 
 
-def possible_moves(i, j):
-    moves = []
-    for key, move in pos_moves.items():
-        if (i + move[0]) >= 0 and (j + move[1] >= 0):
-            moves.append(key)
-    return moves
+s1 = args.s1
+s2 = args.s2
+if args.s1 == "":
+    s1 = read_sequence_from_file(args.filename1)
+    s2 = read_sequence_from_file(args.filename2)
 
-
-def calculate_values_for_moves(i, j, alignment_array, s1, s2, scores):
-    values = []
-    moves = possible_moves(i, j)
-    for move in moves:
-        value = alignment_array[i + pos_moves[move][0]][j + pos_moves[move][1]]
-        if move == LEFT:
-            value += score(s1[j + pos_moves[LEFT][1]], GAP, scores)
-        if move == UP_LEFT:
-            value += score(s1[j + pos_moves[UP_LEFT][1]], s2[i + pos_moves[UP_LEFT][0]], scores)
-        if move == UP:
-            value += score(s2[i + pos_moves[UP][0]], GAP, scores)
-        values.append(value)
-    return values, moves
-
-
-def calculate_best_move_value_local(i, j, alignment_array, s1, s2, score):
-    best = calculate_best_move_value(i, j, alignment_array, s1, s2, score)
-    if best[0] <= 0:
-        best = (0, '')
-    return best
-
-
-def calculate_best_move_value(i, j, alignment_array, s1, s2, score):
-    values, moves = calculate_values_for_moves(i, j, alignment_array, s1, s2, score)
-    return max(values), moves[values.index(max(values))]
-
-
-def fill_alignment_tables(alignment_array, direction_array, s1, s2, score, type):
-    for i in tqdm(range(0, alignment_array.shape[0])):
-        for j in range(0, alignment_array.shape[1]):
-            if i == 0 and j == 0:
-                continue
-            else:
-                if type == LOCAL:
-                    cells = calculate_best_move_value_local(i, j, alignment_array, s1, s2, score)
-                else:
-                    cells = calculate_best_move_value(i, j, alignment_array, s1, s2, score)
-                alignment_array[i, j], direction_array[i, j] = cells
-    return alignment_array, direction_array
-
-
-def calculate_alignment(s1, s2, score, type=GLOBAL):
-    alignment_array, direction_array = init_arrays(s1, s2)
-    alignment_array, direction_array = fill_alignment_tables(alignment_array, direction_array, s1, s2, score, type)
-
-    print(alignment_array)
-    print(direction_array)
-
-    return read_final_alignment(s1, s2, alignment_array, direction_array, type)
-
-
-def read_final_alignment(s1, s2, alignment_array, direction_array, type):
-    i, j = find_final_cell_indexes(alignment_array, type)
-    return get_alignment(i, j, s1, s2, direction_array)
-
-
-def find_final_cell_indexes(alignment_array, type):
-    if type == LOCAL:
-        return np.unravel_index(np.argmax(alignment_array, axis=None), alignment_array.shape)
-    else:
-        return alignment_array.shape[0] - 1, alignment_array.shape[1] - 1
-
-
-def get_alignment(i, j, s1, s2, direction_array):
-    line = ''
-    while direction_array[i, j] != '':
-        m = direction_array[i, j]
-        i = i + pos_moves[m][0]
-        j = j + pos_moves[m][1]
-        if m != UP_LEFT:
-            line = GAP + line
-        else:
-            if s2[i] == s1[j]:
-                line = s1[j] + line
-            else:
-                line = MISMATCH + line
-    return line, j
-
-# with open("APOA5_homo_sapiens.fasta", "r") as f:
-#     gene_id = f.readline()
-#     s1 = f.read()
-#     #print(s1, len(s1))
-#
-# with open("APOA5_bos_taurus.fasta", "r") as f:
-#     gene2_id = f.readline()
-#     s2 = f.read()
-#     #print(s2, len(s2))
-
+line, alingment_char_number, score = calculate_alignment(s1, s2, args.scores, args.type)
+print(str(s1))
+print(str(line))
+print("score: ", score)
+print("start place in sequence: ", str(alingment_char_number))
+with open("results.txt", "w") as f:
+    f.write(str(s1) + "\n")
+    f.write(line + "\n")
+    f.write("score: " + str(score) + "\n")
+    f.write("start place in sequence: " + str(alingment_char_number))
