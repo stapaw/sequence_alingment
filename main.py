@@ -9,6 +9,7 @@ from Bio.SeqRecord import SeqRecord
 parser = argparse.ArgumentParser()
 parser.add_argument("--s1", help="first sequence", type=str, default="")
 parser.add_argument("--s2", help="second sequence", type=str, default="")
+parser.add_argument("--output", help="output filename", type=str, default="results.txt")
 parser.add_argument("--filename1", help="path to file with first sequence in FASTA format", type=str, required=False)
 parser.add_argument("--filename2", help="path to file with second sequence in FASTA format", type=str, required=False)
 parser.add_argument("--type", type=str, help="global or local", default=GLOBAL)
@@ -33,7 +34,7 @@ print(str(s1))
 print(str(GAP * alingment_char_number + line + GAP * (len(s1) - alingment_char_number - len(line)) + "\n"))
 print("score: ", score)
 print("start place in sequence: ", str(alingment_char_number))
-with open("results.txt", "w") as f:
+with open(args.output, "w") as f:
     f.write(str(s1) + "\n")
     f.write(str(GAP * alingment_char_number + line + GAP * (len(s1) - alingment_char_number - len(line)) + "\n"))
     f.write("score: " + str(score) + "\n")
