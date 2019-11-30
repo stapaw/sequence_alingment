@@ -115,7 +115,8 @@ def get_alignment(i, j, s1, s2, direction_array, final_score):
             if s2[i] == s1[j]:
                 line = s1[j] + line
             else:
-                line = MISMATCH + line
+                #line = MISMATCH + line
+                line = s2[i] + line
     return line, j, final_score
 
 

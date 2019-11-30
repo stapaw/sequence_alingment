@@ -30,11 +30,11 @@ if args.s1 == "":
 
 line, alingment_char_number, score = calculate_alignment(s1, s2, args.scores, args.type)
 print(str(s1))
-print(str(line))
+print(str(GAP * alingment_char_number + line + GAP * (len(s1) - alingment_char_number - len(line)) + "\n"))
 print("score: ", score)
 print("start place in sequence: ", str(alingment_char_number))
 with open("results.txt", "w") as f:
     f.write(str(s1) + "\n")
-    f.write(line + "\n")
+    f.write(str(GAP * alingment_char_number + line + GAP * (len(s1) - alingment_char_number - len(line)) + "\n"))
     f.write("score: " + str(score) + "\n")
     f.write("start place in sequence: " + str(alingment_char_number))

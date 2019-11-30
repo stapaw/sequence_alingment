@@ -13,7 +13,7 @@ def test_global():
     s1 = "CAAGAC"
     s2 = "GAAC"
     line, j , score = calculate_alignment(s1, s2, [1, -1, -2])
-    assert line == "*AA--C"
+    assert line == "GAA--C"
     assert j == 0
     assert score == -2
 
@@ -21,14 +21,14 @@ def test_global2():
     s1 = "CAAGTAAGTTA"
     s2 = "CAAGACCT"
     line, j , score = calculate_alignment(s1, s2, [1, -1, -2])
-    assert line == "CAAG-A**T--"
+    assert line == "CAAG-ACCT--"
     assert score == -2
 
 def test_global_score():
     s1 = "CAAGAC"
     s2 = "GAAC"
     line, j , score = calculate_alignment(s1, s2, [1, -1, -1])
-    assert line == "*AA--C"
+    assert line == "GAA--C"
     assert j == 0
     assert score == 0
 
